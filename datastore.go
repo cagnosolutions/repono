@@ -1,6 +1,7 @@
 package repono
 
 import (
+	"log"
 	"regexp"
 	"runtime"
 	"sync"
@@ -109,7 +110,11 @@ func (ds *DataStore) Has(store string, key []byte) bool {
 	return false
 }
 
-func (ds *DataStore) Query(store string, re *regexp.Regexp) [][]byte {
+func (ds *DataStore) Query(store, query string) [][]byte {
+	re, err := regexp.Compile(query)
+	if err != nil {
+		log.Fatal(err)
+	}
 	if st, ok := ds.GetStore(store); ok {
 		return st.Query(re)
 	}

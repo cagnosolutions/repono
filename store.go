@@ -1,9 +1,9 @@
 package repono
 
 import (
-	"bytes"
 	"io/ioutil"
 	"log"
+	"regexp"
 	"strings"
 )
 
@@ -39,7 +39,7 @@ func (st *Store) Get(key []byte) []byte {
 func (st *Store) GetAll() [][]byte {
 	var vals [][]byte
 	for _, data := range st.shards.GetAll() {
-		vals = append(vals, data.val)
+		vals = append(vals, data.V)
 	}
 	return vals
 }
@@ -65,12 +65,15 @@ func (st *Store) Load(files []string) {
 	}
 }
 
-func (st *Store) Query(query []byte) [][]byte {
+func (st *Store) Query(re *regexp.Regexp) [][]byte {
 	var match [][]byte
-	for data := range st.shards.GetAll() {
-		if bytes.Index(data, query) != -1 {
+	for _, data := range st.GetAll() {
+		if idx := re.FindIndex(data); idx != nil {
 			match = append(match, data)
 		}
+		//if bytes.Index(data, query) != -1 {
+		//	match = append(match, data)
+		//}
 	}
 	return match
 }
