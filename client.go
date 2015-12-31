@@ -20,8 +20,9 @@ var (
 
 var (
 	ADDSTORE = []byte{'a', 'd', 'd', 's', 't', 'o', 'r', 'e'}
-	DELSTORE = []byte{'d', 'e', 'l', 's', 't', 'o', 'r', 'e'}
 	GETALL   = []byte{'g', 'e', 't', 'a', 'l', 'l'}
+	DELSTORE = []byte{'d', 'e', 'l', 's', 't', 'o', 'r', 'e'}
+	HASSTORE = []byte{'h', 'a', 's', 's', 't', 'o', 'r', 'e'}
 )
 
 var (
@@ -37,24 +38,6 @@ type Client struct {
 	r    *bufio.Reader
 }
 
-func (c Client) write(b []byte) {
-	n, err := c.w.Write(b)
-	if n < 1 || err != nil {
-		log.Printf("Wrote %d bytes, error: %s\n", n, err)
-		return
-	}
-	n, err = c.w.Write(CRLF)
-	if n < 1 || err != nil {
-		log.Printf("Wrote %d bytes, error: %s\n", n, err)
-		return
-	}
-	err = c.w.Flush()
-	if err != nil {
-		log.Printf("Error flushing write buffer: %s\n", err)
-		return
-	}
-}
-
 func (c Client) read() []byte {
 	b, err := c.r.ReadBytes('\n')
 	if err != nil && err != io.EOF {
@@ -65,19 +48,16 @@ func (c Client) read() []byte {
 	return dropCRLF(b)
 }
 
-func dropCRLF(line []byte) []byte {
-	if line[len(line)-1] == '\n' {
-		drop := 1
-		if len(line) > 1 && line[len(line)-2] == '\r' {
-			drop = 2
-		}
-		line = line[:len(line)-drop]
-	}
-	return line
+func encode(bb [][]byte) []byte {
+	return bytes.Join(bb, []byte{byte(DELIM)})
 }
 
-func encode(bb [][]byte) []byte {
-	return bytes.Join(bb, []byte{DELIM})
+func (c Client) getBool() bool {
+	b := c.read()
+	if b != nil && b[0] == 1 {
+		return true
+	}
+	return false
 }
 
 func Dial(host string) *Client {
@@ -101,45 +81,67 @@ func Dial(host string) *Client {
 }
 
 func (c Client) Ping() bool {
-	c.write(PING)
-	b := c.read()
-	if b != nil && b[0] == 1 {
-		return true
-	}
-	return false
+	write(c.w, PING)
+	return c.getBool()
 }
 
 func (c Client) Quit() {
-	c.write(QUIT)
+	write(c.w, QUIT)
 	c.conn.Close()
 }
 
 func (c Client) AddStore(s string) {
+	write(c.w, encode([][]byte{ADDSTORE, []byte(s)}))
+}
 
+func (c Client) GetAll(s string, ptr interface{}) {
+	write(c.w, encode([][]byte{GETALL, []byte(s)}))
+	err := json.Unmarshal(c.read(), ptr)
+	if err != nil {
+		log.Printf("Error unmarshaling value: %s\n", err)
+	}
+}
+
+func (c Client) HasStore(s string) bool {
+	write(c.w, encode([][]byte{DELSTORE, []byte(s)}))
+	return c.getBool()
 }
 
 func (c Client) DelStore(s string) {
-
+	write(c.w, encode([][]byte{HASSTORE, s}))
 }
 
-func (c Client) GetAll(s string) {
-
-}
-
-func (c Client) Add(s, k string, v interface{}) {
+func (c Client) Add(s, k string, v interface{}) bool {
 	b, err := json.Marshal(v)
 	if err != nil {
 		log.Printf("Error marshaling value: %s\n", err)
 		return
 	}
-	c.write(encode([][]byte{ADD, s, k, v, b}))
+	c.write(encode([][]byte{ADD, s, k, b}))
+	return c.getBool()
 }
 
-func (c Client) Set() {
+func (c Client) Set(s, k string, v interface{}) bool {
+	b, err := json.Marshal(v)
+	if err != nil {
+		log.Printf("Error marshaling value: %s\n", err)
+		return
+	}
+	c.write(encode([][]byte{ADD, s, k, b}))
+	return c.getBool()
 }
 
-func (c Client) Get() {
+func (c Client) Get(s, k string, ptr interface{}) {
+	c.write(encode([][]byte{GET, s, k}))
+	err := json.Unmarshal(c.read(), ptr)
+	if err != nil {
+		log.Printf("Error unmarshaling value: %s\n", err)
+	}
 }
 
-func (c Client) Del() {
+func (c Client) Del(s, k string) {
+	c.write(encode([][]byte{GET, s, k}))
+}
+
+func (c Client) Has() {
 }

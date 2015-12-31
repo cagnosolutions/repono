@@ -1,4 +1,4 @@
-package main
+package repono
 
 import (
 	"bufio"
@@ -83,15 +83,4 @@ func handleConn(conn *net.TCPConn) {
 	log.Println("Disconnecting", conn.RemoteAddr().String(), "Goodbye!")
 	conn.Close()
 	return
-}
-
-func dropCRLF(line []byte) []byte {
-	if line[len(line)-1] == '\n' {
-		drop := 1
-		if len(line) > 1 && line[len(line)-2] == '\r' {
-			drop = 2
-		}
-		line = line[:len(line)-drop]
-	}
-	return line
 }
