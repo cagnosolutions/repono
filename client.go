@@ -33,17 +33,13 @@ func (c Client) getBool() bool {
 }
 
 func Dial(host string) *Client {
-	laddr, err := net.ResolveTCPAddr("tcp", "localhost")
+	addr, err := net.ResolveTCPAddr("tcp", host)
 	if err != nil {
-		log.Fatal(err)
+		log.Fatal("Remote Addr: ", err)
 	}
-	raddr, err := net.ResolveTCPAddr("tcp", host)
+	conn, err := net.DialTCP("tcp", nil, addr)
 	if err != nil {
-		log.Fatal(err)
-	}
-	conn, err := net.DialTCP("tcp", laddr, raddr)
-	if err != nil {
-		log.Fatal(err)
+		log.Fatal("Dial Addr: ", err)
 	}
 	return &Client{
 		conn,
@@ -62,8 +58,14 @@ func (c Client) Quit() {
 	c.conn.Close()
 }
 
-func (c Client) AddStore(s string) {
+func (c Client) UUID() string {
+	write(c.w, UUID)
+	return UUID1ToString(c.read())
+}
+
+func (c Client) AddStore(s string) bool {
 	write(c.w, encode([][]byte{ADDSTORE, []byte(s)}))
+	return c.getBool()
 }
 
 func (c Client) GetAll(s string, ptr interface{}) {
@@ -79,8 +81,9 @@ func (c Client) HasStore(s string) bool {
 	return c.getBool()
 }
 
-func (c Client) DelStore(s string) {
+func (c Client) DelStore(s string) bool {
 	write(c.w, encode([][]byte{HASSTORE, []byte(s)}))
+	return c.getBool()
 }
 
 func (c Client) Add(s, k string, v interface{}) bool {
@@ -111,8 +114,9 @@ func (c Client) Get(s, k string, ptr interface{}) {
 	}
 }
 
-func (c Client) Del(s, k string) {
+func (c Client) Del(s, k string) bool {
 	write(c.w, encode([][]byte{GET, []byte(s), []byte(k)}))
+	return c.getBool()
 }
 
 func (c Client) Has(s, k string) bool {
