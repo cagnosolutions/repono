@@ -12,6 +12,7 @@ var MAXBUF = 4096
 var CRLF = []byte{'\r', '\n'}
 
 var (
+	UUID = []byte{'u', 'u', 'i', 'd'}
 	PING = []byte{'p', 'i', 'n', 'g'}
 	QUIT = []byte{'q', 'u', 'i', 't'}
 )

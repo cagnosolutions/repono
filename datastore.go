@@ -70,6 +70,10 @@ func (ds *DataStore) HasStore(store string) []byte {
 	return FALSE
 }
 
+func (ds *DataStore) UUID() []byte {
+	return UUID1()
+}
+
 func (ds *DataStore) Add(store string, key, val []byte) []byte {
 	st, ok := ds.GetStore(store)
 	if ok && st.Add(key, val) {

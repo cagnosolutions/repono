@@ -59,6 +59,8 @@ func handleConn(ds *DataStore, conn *net.TCPConn) {
 		switch len(bb) {
 		case 1:
 			switch {
+			case bytes.Equal(cmd, UUID):
+				write(w, ds.UUID())
 			case bytes.Equal(cmd, PING):
 				write(w, TRUE)
 			case bytes.Equal(cmd, QUIT):
