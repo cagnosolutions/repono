@@ -1,65 +1,145 @@
 package repono
 
-func _encode(op, st, k, v []byte) []byte {
-	if len(op) < 1 {
-		return nil
-	}
-	b := make([]byte, 4+len(op)+len(st)+len(k)+len(v))
-	for i := 0; i < len(b); i++ {
-		switch {
-		case i == 0:
-			b[0] = byte(len(op))
-		case i < len(op):
-			b[i] = op[i-1]
-		}
-	}
-	return b
+import (
+	"bufio"
+	"bytes"
+	"encoding/json"
+	"io"
+	"log"
+	"net"
+)
+
+var DELIM = '|'
+
+var CRLF = []byte{'\r', '\n'}
+
+var (
+	PING = []byte{'p', 'i', 'n', 'g'}
+	QUIT = []byte{'q', 'u', 'i', 't'}
+)
+
+var (
+	ADDSTORE = []byte{'a', 'd', 'd', 's', 't', 'o', 'r', 'e'}
+	DELSTORE = []byte{'d', 'e', 'l', 's', 't', 'o', 'r', 'e'}
+	GETALL   = []byte{'g', 'e', 't', 'a', 'l', 'l'}
+)
+
+var (
+	ADD = []byte{'a', 'd', 'd'}
+	SET = []byte{'s', 'e', 't'}
+	GET = []byte{'g', 'e', 't'}
+	DEL = []byte{'d', 'e', 't'}
+)
+
+type Client struct {
+	conn *net.TCPConn
+	w    *bufio.Writer
+	r    *bufio.Reader
 }
 
-/*package main
+func (c Client) write(b []byte) {
+	n, err := c.w.Write(b)
+	if n < 1 || err != nil {
+		log.Printf("Wrote %d bytes, error: %s\n", n, err)
+		return
+	}
+	n, err = c.w.Write(CRLF)
+	if n < 1 || err != nil {
+		log.Printf("Wrote %d bytes, error: %s\n", n, err)
+		return
+	}
+	err = c.w.Flush()
+	if err != nil {
+		log.Printf("Error flushing write buffer: %s\n", err)
+		return
+	}
+}
 
-import "fmt"
-
-func main() {
-	//b := encode([]byte("set"), []byte("user"), []byte("273487248"), []byte(`{"name":"greg","age":29,"active":true}`))
-	//b := encode([]byte("getall"), []byte("user"), nil, nil)
-	b := encode([]byte("get"), []byte("user"), []byte("273487249"), nil)
-
-	fmt.Printf("%s\n", b)
-	fmt.Printf("% x\n", b)
-
-}*/
-
-func encode(op, st, k, v []byte) []byte {
-	if len(op) < 1 {
+func (c Client) read() []byte {
+	b, err := c.r.ReadBytes('\n')
+	if err != nil && err != io.EOF {
+		log.Printf("Encountered an error while reading: %s\n", err)
+		c.conn.Close()
 		return nil
 	}
-	b := make([]byte, 5+len(op)+len(st)+len(k)+len(v))
-	args := 0
-	for i := 1; i < len(b); i++ {
-		switch {
-		case i == 1:
-			b[i] = byte(len(op))
-			args++
-		case i < len(op)+2:
-			b[i] = op[i-2]
-		case i == len(op)+2 && st != nil:
-			b[i] = byte(len(st))
-			args++
-		case i < len(st)+len(op)+3 && st != nil:
-			b[i] = st[i-(len(op)+3)]
-		case i == len(st)+len(op)+3 && k != nil:
-			b[i] = byte(len(k))
-			args++
-		case i < len(k)+len(st)+len(op)+4 && k != nil:
-			b[i] = k[i-(len(st)+len(op)+4)]
-		case i < len(b)-1 && v != nil:
-			args = 4
-			b[i] = v[i-(len(k)+len(st)+len(op)+4)]
-		}
-	}
-	b[len(b)-1] = byte('\n')
+	return dropCRLF(b)
+}
 
-	b[0] = byte(args)
-	return b
+func dropCRLF(line []byte) []byte {
+	if line[len(line)-1] == '\n' {
+		drop := 1
+		if len(line) > 1 && line[len(line)-2] == '\r' {
+			drop = 2
+		}
+		line = line[:len(line)-drop]
+	}
+	return line
+}
+
+func encode(bb [][]byte) []byte {
+	return bytes.Join(bb, []byte{DELIM})
+}
+
+func Dial(host string) *Client {
+	laddr, err := net.ResolveTCPAddr("tcp", "localhost")
+	if err != nil {
+		log.Fatal(err)
+	}
+	raddr, err := net.ResolveTCPAddr("tcp", host)
+	if err != nil {
+		log.Fatal(err)
+	}
+	conn, err := net.DialTCP("tcp", laddr, raddr)
+	if err != nil {
+		log.Fatal(err)
+	}
+	return &Client{
+		conn,
+		bufio.NewWriter(conn),
+		bufio.NewReader(conn),
+	}
+}
+
+func (c Client) Ping() bool {
+	c.write(PING)
+	b := c.read()
+	if b != nil && b[0] == 1 {
+		return true
+	}
+	return false
+}
+
+func (c Client) Quit() {
+	c.write(QUIT)
+	c.conn.Close()
+}
+
+func (c Client) AddStore(s string) {
+
+}
+
+func (c Client) DelStore(s string) {
+
+}
+
+func (c Client) GetAll(s string) {
+
+}
+
+func (c Client) Add(s, k string, v interface{}) {
+	b, err := json.Marshal(v)
+	if err != nil {
+		log.Printf("Error marshaling value: %s\n", err)
+		return
+	}
+	c.write(encode([][]byte{ADD, s, k, v, b}))
+}
+
+func (c Client) Set() {
+}
+
+func (c Client) Get() {
+}
+
+func (c Client) Del() {
 }
