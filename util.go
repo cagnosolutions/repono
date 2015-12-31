@@ -2,6 +2,8 @@ package repono
 
 import "bytes"
 
+var DB_PATH string = "db/"
+
 func formatList(bb [][]byte) []byte {
 	if bb != nil {
 		bb[0] = append([]byte{'['}, bb[0]...)

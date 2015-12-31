@@ -57,7 +57,7 @@ func (st *Store) Has(key []byte) bool {
 
 func (st *Store) Load(files []string) {
 	for _, file := range files {
-		data, err := ioutil.ReadFile(PATH + st.Name + "/" + file)
+		data, err := ioutil.ReadFile(DB_PATH + st.Name + "/" + file)
 		if err != nil {
 			log.Fatal(err)
 		}

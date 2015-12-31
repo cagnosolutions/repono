@@ -7,8 +7,6 @@ import (
 	"sync"
 )
 
-var PATH string = "db/"
-
 type DataStore struct {
 	Stores map[string]*Store
 	sync.RWMutex
@@ -18,10 +16,10 @@ func NewDataStore() *DataStore {
 	ds := &DataStore{
 		Stores: make(map[string]*Store, 0),
 	}
-	if PATH[len(PATH)-1] != '/' {
-		PATH += "/"
+	if DB_PATH[len(DB_PATH)-1] != '/' {
+		DB_PATH += "/"
 	}
-	if data := Walk(PATH); len(data) > 0 {
+	if data := Walk(DB_PATH); len(data) > 0 {
 		ds.Lock()
 		for store, files := range data {
 			st := NewStore(store)
@@ -34,13 +32,14 @@ func NewDataStore() *DataStore {
 	return ds
 }
 
-func (ds *DataStore) AddStore(store string) {
+func (ds *DataStore) AddStore(store string) []byte {
 	if _, ok := ds.GetStore(store); !ok {
 		ds.Lock()
 		ds.Stores[store] = NewStore(store)
 		WriteStore(store)
 		ds.Unlock()
 	}
+	return TRUE
 }
 
 // for internal use only
@@ -51,35 +50,40 @@ func (ds *DataStore) GetStore(store string) (*Store, bool) {
 	return st, ok
 }
 
-func (ds *DataStore) DelStore(store string) {
+func (ds *DataStore) DelStore(store string) []byte {
 	if _, ok := ds.GetStore(store); !ok {
 		ds.Lock()
 		delete(ds.Stores, store)
 		DeleteStore(store)
 		ds.Unlock()
 	}
+	return TRUE
 }
 
-func (ds *DataStore) HasStore(store string) bool {
+func (ds *DataStore) HasStore(store string) []byte {
 	ds.RLock()
 	_, ok := ds.Stores[store]
 	ds.RUnlock()
-	return ok
-}
-
-func (ds *DataStore) Add(store string, key, val []byte) bool {
-	if st, ok := ds.GetStore(store); ok {
-		return st.Add(key, val)
+	if ok {
+		return TRUE
 	}
-	return false
+	return FALSE
 }
 
-func (ds *DataStore) Set(store string, key, val []byte) bool {
+func (ds *DataStore) Add(store string, key, val []byte) []byte {
+	st, ok := ds.GetStore(store)
+	if ok && st.Add(key, val) {
+		return TRUE
+	}
+	return FALSE
+}
+
+func (ds *DataStore) Set(store string, key, val []byte) []byte {
 	if st, ok := ds.GetStore(store); ok {
 		st.Set(key, val)
-		return true
+		return TRUE
 	}
-	return false
+	return FALSE
 }
 
 func (ds *DataStore) Get(store string, key []byte) []byte {
@@ -96,17 +100,19 @@ func (ds *DataStore) GetAll(store string) []byte {
 	return nil
 }
 
-func (ds *DataStore) Del(store string, key []byte) {
+func (ds *DataStore) Del(store string, key []byte) []byte {
 	if st, ok := ds.GetStore(store); ok {
 		st.Del(key)
 	}
+	return TRUE
 }
 
-func (ds *DataStore) Has(store string, key []byte) bool {
-	if st, ok := ds.GetStore(store); ok {
-		return st.Has(key)
+func (ds *DataStore) Has(store string, key []byte) []byte {
+	st, ok := ds.GetStore(store)
+	if ok && st.Has(key) {
+		return TRUE
 	}
-	return false
+	return FALSE
 }
 
 func (ds *DataStore) Query(store, query string) []byte {

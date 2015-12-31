@@ -9,18 +9,10 @@ import (
 	"time"
 )
 
-/*
-type Server struct {
-	ds *DataStore
-}
-
-func NewServer() *Server {
-	return &Server{
-		ds: NewDataStore(),
+func ListenAndServe(port string, path ...string) {
+	if len(path) == 1 {
+		DB_PATH = path[0]
 	}
-}*/
-
-func ListenAndServe(port string) {
 	ds := NewDataStore()
 	log.Println("Server starting...")
 	addr, err := net.ResolveTCPAddr("tcp", port)
@@ -65,7 +57,7 @@ func handleConn(ds *DataStore, conn *net.TCPConn) {
 		bb := bytes.SplitN(dropCRLF(b), []byte{byte(DELIM)}, 4)
 		cmd := bb[0]
 		switch len(bb) {
-		case 1: // ping, quit
+		case 1:
 			switch {
 			case bytes.Equal(cmd, PING):
 				write(w, TRUE)
@@ -80,13 +72,11 @@ func handleConn(ds *DataStore, conn *net.TCPConn) {
 			store := string(bb[1])
 			switch {
 			case bytes.Equal(cmd, ADDSTORE):
-				ds.AddStore(store)
-				write(w, TRUE)
+				write(w, ds.AddStore(store))
 			case bytes.Equal(cmd, GETALL):
 				write(w, ds.GetAll(store))
 			case bytes.Equal(cmd, DELSTORE):
-				ds.DelStore(store)
-				write(w, TRUE)
+				write(w, ds.DelStore(store))
 			case bytes.Equal(cmd, HASSTORE):
 				write(w, ds.HasStore(store))
 			default:
