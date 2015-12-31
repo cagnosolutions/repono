@@ -1,35 +1,12 @@
 package repono
 
-import (
-	"bufio"
-	"log"
-)
+import "bytes"
 
-func dropCRLF(line []byte) []byte {
-	if line[len(line)-1] == '\n' {
-		drop := 1
-		if len(line) > 1 && line[len(line)-2] == '\r' {
-			drop = 2
-		}
-		line = line[:len(line)-drop]
+func formatList(bb [][]byte) []byte {
+	if bb != nil {
+		bb[0] = append([]byte{'['}, bb[0]...)
+		bb[len(bb)-1] = append(bb[len(bb)-1], ']')
+		return bytes.Join(bb, []byte{','})
 	}
-	return line
-}
-
-func write(w *bufio.Writer, b []byte) {
-	n, err := w.Write(b)
-	if n < 1 || err != nil {
-		log.Printf("Wrote %d bytes, error: %s\n", n, err)
-		return
-	}
-	n, err = w.Write(CRLF)
-	if n < 1 || err != nil {
-		log.Printf("Wrote %d bytes, error: %s\n", n, err)
-		return
-	}
-	err = w.Flush()
-	if err != nil {
-		log.Printf("Error flushing write buffer: %s\n", err)
-		return
-	}
+	return nil
 }

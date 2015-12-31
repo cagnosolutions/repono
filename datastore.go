@@ -89,9 +89,9 @@ func (ds *DataStore) Get(store string, key []byte) []byte {
 	return nil
 }
 
-func (ds *DataStore) GetAll(store string) [][]byte {
+func (ds *DataStore) GetAll(store string) []byte {
 	if st, ok := ds.GetStore(store); ok {
-		return st.GetAll()
+		return formatList(st.GetAll())
 	}
 	return nil
 }
@@ -109,13 +109,13 @@ func (ds *DataStore) Has(store string, key []byte) bool {
 	return false
 }
 
-func (ds *DataStore) Query(store, query string) [][]byte {
+func (ds *DataStore) Query(store, query string) []byte {
 	re, err := regexp.Compile(query)
 	if err != nil {
 		log.Fatal(err)
 	}
 	if st, ok := ds.GetStore(store); ok {
-		return st.Query(re)
+		return formatList(st.Query(re))
 	}
 	return nil
 }
