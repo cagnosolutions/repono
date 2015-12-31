@@ -71,9 +71,6 @@ func (st *Store) Query(re *regexp.Regexp) [][]byte {
 		if idx := re.FindIndex(data); idx != nil {
 			match = append(match, data)
 		}
-		//if bytes.Index(data, query) != -1 {
-		//	match = append(match, data)
-		//}
 	}
 	return match
 }

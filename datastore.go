@@ -21,7 +21,6 @@ func NewDataStore() *DataStore {
 	if PATH[len(PATH)-1] != '/' {
 		PATH += "/"
 	}
-	// check if ds is empty; walk path and load; gc
 	if data := Walk(PATH); len(data) > 0 {
 		ds.Lock()
 		for store, files := range data {
