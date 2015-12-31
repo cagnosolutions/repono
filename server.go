@@ -9,11 +9,19 @@ import (
 	"time"
 )
 
-func main() {
-	ListenAndServe(":9999")
+/*
+type Server struct {
+	ds *DataStore
 }
 
+func NewServer() *Server {
+	return &Server{
+		ds: NewDataStore(),
+	}
+}*/
+
 func ListenAndServe(port string) {
+	ds := NewDataStore()
 	log.Println("Server starting...")
 	addr, err := net.ResolveTCPAddr("tcp", port)
 	if err != nil {
@@ -31,11 +39,11 @@ func ListenAndServe(port string) {
 			continue
 		}
 		log.Printf("Handling connection from %v\n", conn.RemoteAddr().String())
-		go handleConn(conn)
+		go handleConn(ds, conn)
 	}
 }
 
-func handleConn(conn *net.TCPConn) {
+func handleConn(ds *DataStore, conn *net.TCPConn) {
 	r, w := bufio.NewReader(conn), bufio.NewWriter(conn)
 	for {
 		b, err := r.ReadBytes('\n')
@@ -54,30 +62,63 @@ func handleConn(conn *net.TCPConn) {
 			w.Flush()
 			continue
 		}
-		bb := bytes.SplitN(dropCRLF(b), []byte{'|'}, 4)
+		bb := bytes.SplitN(dropCRLF(b), []byte{byte(DELIM)}, 4)
+		cmd := bb[0]
 		switch len(bb) {
 		case 1: // ping, quit
-			switch string(bb[0]) {
-			case "ping":
-				w.Write([]byte("pong\n"))
-			case "quit":
+			switch {
+			case bytes.Equal(cmd, PING):
+				write(w, TRUE)
+			case bytes.Equal(cmd, QUIT):
 				log.Println("Client quit")
-				w.Write([]byte("Goodbye!\n"))
-				w.Flush()
 				conn.Close()
 				return
 			default:
-				log.Printf("(hit case 1) bb[0]: %s\n", bb[0])
-				w.Write([]byte("hit case 1\n"))
+				write(w, ERR1)
 			}
 		case 2:
-			w.Write([]byte("hit case 2\n"))
+			store := string(bb[1])
+			switch {
+			case bytes.Equal(cmd, ADDSTORE):
+				ds.AddStore(store)
+				write(w, TRUE)
+			case bytes.Equal(cmd, GETALL):
+				write(w, ds.GetAll(store))
+			case bytes.Equal(cmd, DELSTORE):
+				ds.DelStore(store)
+				write(w, TRUE)
+			case bytes.Equal(cmd, HASSTORE):
+				write(w, ds.HasStore(store))
+			default:
+				write(w, ERR2)
+			}
 		case 3:
-			w.Write([]byte("hit case 3\n"))
+			store := string(bb[1])
+			key := bb[2]
+			switch {
+			case bytes.Equal(cmd, GET):
+				write(w, ds.Get(store, key))
+			case bytes.Equal(cmd, DEL):
+				write(w, ds.Del(store, key))
+			case bytes.Equal(cmd, HAS):
+				write(w, ds.Has(store, key))
+			default:
+				write(w, ERR3)
+			}
 		case 4:
-			w.Write([]byte("hit case 4\n"))
+			store := string(bb[1])
+			key := bb[2]
+			val := bb[3]
+			switch {
+			case bytes.Equal(cmd, ADD):
+				write(w, ds.Add(store, key, val))
+			case bytes.Equal(cmd, SET):
+				write(w, ds.Set(store, key, val))
+			default:
+				write(w, ERR4)
+			}
 		default:
-			w.Write([]byte("hit default\n"))
+			write(w, ERR5)
 		}
 		w.Flush()
 	}

@@ -31,6 +31,16 @@ var (
 	HAS = []byte{'h', 'a', 's'}
 )
 
+var (
+	TRUE  = []byte{1}
+	FALSE = []byte{0}
+	ERR1  = []byte{'e', 'r', 'r', '1'}
+	ERR2  = []byte{'e', 'r', 'r', '2'}
+	ERR3  = []byte{'e', 'r', 'r', '3'}
+	ERR4  = []byte{'e', 'r', 'r', '4'}
+	ERR5  = []byte{'e', 'r', 'r', '5'}
+)
+
 func dropCRLF(line []byte) []byte {
 	if line[len(line)-1] == '\n' {
 		drop := 1
