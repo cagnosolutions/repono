@@ -7,6 +7,7 @@ import (
 )
 
 var DELIM = '|'
+var MAXBUF = 4096
 
 var CRLF = []byte{'\r', '\n'}
 

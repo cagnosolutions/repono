@@ -41,17 +41,18 @@ func handleConn(conn *net.TCPConn) {
 		b, err := r.ReadBytes('\n')
 		if err == io.EOF {
 			break
-		} else if err == bufio.ErrBufferFull {
-			log.Println("Client sent data exceeding size limit of 4096")
-			w.Write([]byte("Exceeded data size (limit 4096)\n"))
-			w.Flush()
-			continue
 		} else if err != nil {
 			log.Println("Got error, disconnecting client:", err)
 			conn.Close()
 			return
 		} else {
 			conn.SetDeadline(time.Now().Add(8 * time.Minute))
+		}
+		if len(b) > MAXBUF {
+			log.Println("Client sent data exceeding size limit of 4096")
+			w.Write([]byte("Exceeded data size (limit 4096)\n"))
+			w.Flush()
+			continue
 		}
 		bb := bytes.SplitN(dropCRLF(b), []byte{'|'}, 4)
 		switch len(bb) {
