@@ -10,5 +10,5 @@ func formatList(bb [][]byte) []byte {
 		bb[len(bb)-1] = append(bb[len(bb)-1], ']')
 		return bytes.Join(bb, []byte{','})
 	}
-	return nil
+	return NIL
 }

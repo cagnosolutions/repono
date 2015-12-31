@@ -8,7 +8,7 @@ import (
 
 func Walk(start string) map[string][]string {
 	w := Walker{
-		StartDir: start,
+		StartDir: start[:len(start)-1],
 		Stores:   make(map[string][]string),
 	}
 	filepath.Walk(w.StartDir, w.Texas)

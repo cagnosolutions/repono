@@ -40,6 +40,7 @@ var (
 	ERR3  = []byte{'e', 'r', 'r', '3'}
 	ERR4  = []byte{'e', 'r', 'r', '4'}
 	ERR5  = []byte{'e', 'r', 'r', '5'}
+	NIL   = []byte{}
 )
 
 func dropCRLF(line []byte) []byte {

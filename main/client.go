@@ -44,4 +44,18 @@ func main() {
 		fmt.Printf("user %d add: %v\n", i, b)
 	}
 	fmt.Println("adding finished!")
+
+	/*uuid := c.UUID()
+	c.Add("user", uuid, User{
+		Name:   "greg",
+		Age:    29,
+		Active: true,
+	})
+	var user User
+	c.Get("user", uuid, &user)
+	fmt.Printf("%v\n", user)*/
+
+	var users []User
+	c.GetAll("user", &users)
+	fmt.Printf("%v\n", users)
 }

@@ -94,14 +94,14 @@ func (ds *DataStore) Get(store string, key []byte) []byte {
 	if st, ok := ds.GetStore(store); ok {
 		return st.Get(key)
 	}
-	return nil
+	return NIL
 }
 
 func (ds *DataStore) GetAll(store string) []byte {
 	if st, ok := ds.GetStore(store); ok {
 		return formatList(st.GetAll())
 	}
-	return nil
+	return NIL
 }
 
 func (ds *DataStore) Del(store string, key []byte) []byte {
