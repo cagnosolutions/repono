@@ -34,7 +34,8 @@ func NewShards() *Shards {
 func (s Shards) shard(key []byte) *Shard {
 	h := fnv.New32()
 	h.Write(key)
-	return s[uint(h.Sum32())%uint(SHARDCOUNT)]
+	bucket := uint(h.Sum32()) % uint(SHARDCOUNT)
+	return s[bucket]
 }
 
 func (s *Shards) Add(key, val []byte) bool {
@@ -116,7 +117,8 @@ func (s Shards) Iter() <-chan Data {
 			shard.RLock()
 			enum, err := shard.data.SeekFirst()
 			if err != nil {
-				break
+				shard.RUnlock()
+				continue
 			}
 			for {
 				k, v, err := enum.Next()

@@ -71,7 +71,7 @@ func (ds *DataStore) HasStore(store string) []byte {
 }
 
 func (ds *DataStore) UUID() []byte {
-	return UUID1()
+	return []byte(UUID1())
 }
 
 func (ds *DataStore) Add(store string, key, val []byte) []byte {
@@ -127,7 +127,7 @@ func (ds *DataStore) Query(store, query string) []byte {
 	if st, ok := ds.GetStore(store); ok {
 		return formatList(st.Query(re))
 	}
-	return nil
+	return NIL
 }
 
 func (ds *DataStore) Import() {

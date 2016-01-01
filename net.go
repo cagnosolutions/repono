@@ -56,13 +56,19 @@ func dropCRLF(line []byte) []byte {
 
 func write(w *bufio.Writer, b []byte) {
 	n, err := w.Write(b)
-	if n < 1 || err != nil {
-		log.Printf("Wrote %d bytes, error: %s\n", n, err)
+	if n < 1 {
+		log.Printf("Error, %d bytes to write\n", n)
+		return
+	} else if err != nil {
+		log.Printf("Error writing: %s\n", err)
 		return
 	}
 	n, err = w.Write(CRLF)
-	if n < 1 || err != nil {
-		log.Printf("Wrote %d bytes, error: %s\n", n, err)
+	if n < 1 {
+		log.Printf("Error, %d bytes to write\n", n)
+		return
+	} else if err != nil {
+		log.Printf("Error writing: %s\n", err)
 		return
 	}
 	err = w.Flush()

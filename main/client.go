@@ -7,15 +7,15 @@ import (
 )
 
 type User struct {
-	Name   string
-	Age    int
-	Active bool
+	Name   string `json:"name,omitempty"`
+	Age    int    `json:"age,omitempty"`
+	Active bool   `json:"active:omitempty"`
 }
 
 type Order struct {
-	Item     string
-	Quantity int
-	Paid     bool
+	Item     string `json:"item,omitempty"`
+	Quantity int    `json:"quantity,omitempty"`
+	Paid     bool   `json:"paid,omitempty"`
 }
 
 func main() {
@@ -24,8 +24,16 @@ func main() {
 	c.AddStore("user")
 	c.AddStore("order")
 	fmt.Println("adding users...")
+
+	uuid1 := c.UUID()
+	c.Add("user", uuid1, User{
+		Name:   uuid1,
+		Age:    99,
+		Active: false,
+	})
+
 	for i := 0; i < 10; i++ {
-		s := fmt.Sprintf("%d", i)
+		s := c.UUID()
 		b := c.Add("user", s, User{
 			Name:   s,
 			Age:    i,
@@ -35,7 +43,7 @@ func main() {
 	}
 	fmt.Println("adding orders...")
 	for i := 0; i < 10; i++ {
-		s := fmt.Sprintf("%d", i)
+		s := c.UUID()
 		b := c.Add("order", s, Order{
 			Item:     s,
 			Quantity: i,
@@ -45,17 +53,17 @@ func main() {
 	}
 	fmt.Println("adding finished!")
 
-	/*uuid := c.UUID()
-	c.Add("user", uuid, User{
-		Name:   "greg",
-		Age:    29,
-		Active: true,
-	})
+	fmt.Println("getting a single user...")
+
 	var user User
-	c.Get("user", uuid, &user)
-	fmt.Printf("%v\n", user)*/
+	c.Get("user", uuid1, &user)
+	fmt.Printf("Get() -> %+v\n", user)
+
+	fmt.Println("getting all users...")
 
 	var users []User
 	c.GetAll("user", &users)
-	fmt.Printf("%v\n", users)
+	for _, u := range users {
+		fmt.Printf("id: %s, user: %+v\n", u.Name, u)
+	}
 }

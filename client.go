@@ -58,9 +58,11 @@ func (c Client) Quit() {
 	c.conn.Close()
 }
 
+// localize uuid call, no need to reach out to the server, right?
 func (c Client) UUID() string {
-	write(c.w, UUID)
-	return UUID1ToString(c.read())
+	//write(c.w, UUID)
+	//return string(c.read())
+	return UUID1()
 }
 
 func (c Client) AddStore(s string) bool {
