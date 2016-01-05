@@ -3,9 +3,13 @@ package repono
 import (
 	"bufio"
 	"bytes"
+	"fmt"
 	"io"
 	"log"
 	"net"
+	"os"
+	"os/signal"
+	"syscall"
 	"time"
 )
 
@@ -24,6 +28,7 @@ func ListenAndServe(port string, path ...string) {
 		log.Fatal(err)
 	}
 	log.Println("Listening on", port, "for connections...")
+	catchSigInts()
 	for {
 		conn, err := ln.AcceptTCP()
 		if err != nil {
@@ -33,6 +38,16 @@ func ListenAndServe(port string, path ...string) {
 		log.Printf("Handling connection from %v\n", conn.RemoteAddr().String())
 		go handleConn(ds, conn)
 	}
+}
+
+// catch interrupt signals
+func catchSigInts() {
+	sig := make(chan os.Signal, 1)
+	signal.Notify(sig, syscall.SIGINT, syscall.SIGQUIT, syscall.SIGTERM, syscall.SIGKILL, syscall.SIGSTOP)
+	go func() {
+		fmt.Printf("\nCaught signal: %v, exiting...\n", <-sig)
+		os.Exit(0)
+	}()
 }
 
 func handleConn(ds *DataStore, conn *net.TCPConn) {
