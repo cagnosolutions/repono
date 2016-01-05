@@ -67,9 +67,9 @@ func (st *Store) Load(files []string) {
 
 func (st *Store) Query(re *regexp.Regexp) [][]byte {
 	var match [][]byte
-	for _, data := range st.GetAll() {
-		if idx := re.FindIndex(data); idx != nil {
-			match = append(match, data)
+	for _, data := range st.shards.GetAll() {
+		if idx := re.FindIndex(data.V); idx != nil {
+			match = append(match, data.V)
 		}
 	}
 	return match

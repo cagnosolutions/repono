@@ -70,6 +70,11 @@ func handleConn(ds *DataStore, conn *net.TCPConn) {
 			continue
 		}
 		bb := bytes.SplitN(dropCRLF(b), []byte{byte(DELIM)}, 4)
+		if bytes.Equal(bb[0], QUERY) && len(bb) > 2 {
+			fmt.Println("SERVER: querying...")
+			write(w, ds.Query(string(bb[1]), string(bytes.Join(bb[2:], []byte{'|'}))))
+			continue
+		}
 		cmd := bb[0]
 		switch len(bb) {
 		case 1:
@@ -122,12 +127,14 @@ func handleConn(ds *DataStore, conn *net.TCPConn) {
 			case bytes.Equal(cmd, SET):
 				write(w, ds.Set(store, key, val))
 			default:
+				for _, b := range bb {
+					fmt.Printf("%s\n", b)
+				}
 				write(w, ERR4)
 			}
 		default:
 			write(w, ERR5)
 		}
-		w.Flush()
 	}
 	log.Println("Disconnecting", conn.RemoteAddr().String(), "Goodbye!")
 	conn.Close()

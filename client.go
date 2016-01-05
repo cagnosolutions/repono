@@ -3,10 +3,46 @@ package repono
 import (
 	"bufio"
 	"encoding/json"
+	"fmt"
 	"io"
 	"log"
 	"net"
+	"strings"
 )
+
+// ^(?=.*"age":[1-5])(?=.*"active":true).*$
+
+type Q [2]interface{}
+
+func Stmt(q ...Q) string {
+	if len(q) < 1 {
+		return ""
+	}
+	var s []string
+	for i, p := range q {
+		switch p[1].(type) {
+		case string:
+			p[1] = fmt.Sprintf("%q", p[1].(string))
+		}
+		s = append(s, fmt.Sprintf("(%q:%v)", p[0].(string), p[1]))
+		if i < len(q)-1 {
+			s = append(s, ".+")
+		}
+
+	}
+
+	s2 := make([]string, len(s))
+	copy(s2, s)
+	for i := len(s2)/2 - 1; i >= 0; i-- {
+		x := len(s2) - 1 - i
+		s2[i], s2[x] = s2[x], s2[i]
+
+	}
+
+	s = append(s, "|")
+	s = append(s, s2...)
+	return strings.Join(s, "")
+}
 
 type Client struct {
 	conn *net.TCPConn
@@ -88,6 +124,16 @@ func (c Client) DelStore(s string) bool {
 	return c.getBool()
 }
 
+func (c Client) Put(s string, v interface{}) bool {
+	b, err := json.Marshal(v)
+	if err != nil {
+		log.Printf("Error marshaling value: %s\n", err)
+		return false
+	}
+	write(c.w, encode([][]byte{PUT, []byte(s), b}))
+	return c.getBool()
+}
+
 func (c Client) Add(s, k string, v interface{}) bool {
 	b, err := json.Marshal(v)
 	if err != nil {
@@ -104,7 +150,7 @@ func (c Client) Set(s, k string, v interface{}) bool {
 		log.Printf("Error marshaling value: %s\n", err)
 		return false
 	}
-	write(c.w, encode([][]byte{ADD, []byte(s), []byte(k), b}))
+	write(c.w, encode([][]byte{SET, []byte(s), []byte(k), b}))
 	return c.getBool()
 }
 
@@ -117,11 +163,21 @@ func (c Client) Get(s, k string, ptr interface{}) {
 }
 
 func (c Client) Del(s, k string) bool {
-	write(c.w, encode([][]byte{GET, []byte(s), []byte(k)}))
+	write(c.w, encode([][]byte{DEL, []byte(s), []byte(k)}))
 	return c.getBool()
 }
 
 func (c Client) Has(s, k string) bool {
 	write(c.w, encode([][]byte{HAS, []byte(s), []byte(k)}))
 	return c.getBool()
+}
+
+func (c Client) Query(s, q string, ptr interface{}) bool {
+	write(c.w, encode([][]byte{QUERY, []byte(s), []byte(q)}))
+	err := json.Unmarshal(c.read(), ptr)
+	if err != nil {
+		log.Printf("Error unmarshaling value: %s\n", err)
+		return false
+	}
+	return true
 }

@@ -9,7 +9,7 @@ import (
 type User struct {
 	Name   string `json:"name,omitempty"`
 	Age    int    `json:"age,omitempty"`
-	Active bool   `json:"active:omitempty"`
+	Active bool   `json:"active,omitempty"`
 }
 
 type Order struct {
@@ -64,6 +64,12 @@ func main() {
 	var users []User
 	c.GetAll("user", &users)
 	for _, u := range users {
+		fmt.Printf("id: %s, user: %+v\n", u.Name, u)
+	}
+	fmt.Println()
+	var q []User
+	c.Query("user", repono.Stmt(repono.Q{"active", true}, repono.Q{"age", 2}), &q)
+	for _, u := range q {
 		fmt.Printf("id: %s, user: %+v\n", u.Name, u)
 	}
 }

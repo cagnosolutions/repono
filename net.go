@@ -25,11 +25,13 @@ var (
 )
 
 var (
+	PUT = []byte{'p', 'u', 't'}
 	ADD = []byte{'a', 'd', 'd'}
 	SET = []byte{'s', 'e', 't'}
 	GET = []byte{'g', 'e', 't'}
 	DEL = []byte{'d', 'e', 't'}
 	HAS = []byte{'h', 'a', 's'}
+	QUERY = []byte{'q', 'u', 'e', 'r','y'}
 )
 
 var (

@@ -74,6 +74,16 @@ func (ds *DataStore) UUID() []byte {
 	return []byte(UUID1())
 }
 
+// datastore generates and returns key on insert, behaves like add
+func (ds *DataStore) Put(store string, val []byte) []byte {
+	st, ok := ds.GetStore(store)
+	key := []byte(UUID1())
+	if ok && st.Add(key, val) {
+		return key
+	}
+	return NIL
+}
+
 func (ds *DataStore) Add(store string, key, val []byte) []byte {
 	st, ok := ds.GetStore(store)
 	if ok && st.Add(key, val) {
@@ -122,7 +132,8 @@ func (ds *DataStore) Has(store string, key []byte) []byte {
 func (ds *DataStore) Query(store, query string) []byte {
 	re, err := regexp.Compile(query)
 	if err != nil {
-		log.Fatal(err)
+		log.Println(err)
+		return NIL
 	}
 	if st, ok := ds.GetStore(store); ok {
 		return formatList(st.Query(re))
