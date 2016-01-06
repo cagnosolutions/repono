@@ -71,8 +71,7 @@ func handleConn(ds *DataStore, conn *net.TCPConn) {
 		}
 		bb := bytes.SplitN(dropCRLF(b), []byte{byte(DELIM)}, 4)
 		if bytes.Equal(bb[0], QUERY) && len(bb) > 2 {
-			fmt.Println("SERVER: querying...")
-			write(w, ds.Query(string(bb[1]), string(bytes.Join(bb[2:], []byte{'|'}))))
+			write(w, ds.Query(string(bb[1]), bb[2:]))
 			continue
 		}
 		cmd := bb[0]

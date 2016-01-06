@@ -67,8 +67,9 @@ func main() {
 		fmt.Printf("id: %s, user: %+v\n", u.Name, u)
 	}
 	fmt.Println()
+
 	var q []User
-	c.Query("user", repono.Stmt(repono.Q{"active", true}, repono.Q{"age", 2}), &q)
+	c.Query("user", repono.Q{"active": true, "age": 2}, &q)
 	for _, u := range q {
 		fmt.Printf("id: %s, user: %+v\n", u.Name, u)
 	}

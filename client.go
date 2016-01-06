@@ -2,6 +2,7 @@ package repono
 
 import (
 	"bufio"
+	"bytes"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -12,9 +13,11 @@ import (
 
 // ^(?=.*"age":[1-5])(?=.*"active":true).*$
 
-type Q [2]interface{}
+type _Q [2]interface{}
 
-func Stmt(q ...Q) string {
+type Q map[string]interface{}
+
+func Stmt(q ..._Q) string {
 	if len(q) < 1 {
 		return ""
 	}
@@ -172,7 +175,23 @@ func (c Client) Has(s, k string) bool {
 	return c.getBool()
 }
 
-func (c Client) Query(s, q string, ptr interface{}) bool {
+func (c Client) Query(s string, q Q, ptr interface{}) bool {
+	b, err := json.Marshal(q)
+	if err != nil {
+		return false
+	}
+	b = bytes.Replace(b, []byte(`,"`), []byte(`|"`), -1)
+	b = bytes.Replace(b, []byte(`",`), []byte(`"|`), -1)
+	write(c.w, encode([][]byte{QUERY, []byte(s), b[1 : len(b)-1]}))
+	err = json.Unmarshal(c.read(), ptr)
+	if err != nil {
+		log.Printf("Error unmarshaling value: %s\n", err)
+		return false
+	}
+	return true
+}
+
+func (c Client) _Query(s, q string, ptr interface{}) bool {
 	write(c.w, encode([][]byte{QUERY, []byte(s), []byte(q)}))
 	err := json.Unmarshal(c.read(), ptr)
 	if err != nil {

@@ -65,7 +65,15 @@ func (st *Store) Load(files []string) {
 	}
 }
 
-func (st *Store) Query(re *regexp.Regexp) [][]byte {
+func (st *Store) Query(query [][]byte) [][]byte {
+	var vals [][]byte
+	for _, data := range st.shards.Query(query) {
+		vals = append(vals, data.V)
+	}
+	return vals
+}
+
+func (st *Store) _Query(re *regexp.Regexp) [][]byte {
 	var match [][]byte
 	for _, data := range st.shards.GetAll() {
 		if idx := re.FindIndex(data.V); idx != nil {

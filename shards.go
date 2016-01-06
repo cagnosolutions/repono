@@ -2,6 +2,7 @@ package repono
 
 import (
 	"bytes"
+	"fmt"
 	"hash/fnv"
 	"io"
 	"log"
@@ -110,39 +111,50 @@ func (s Shards) Size() int {
 	return n
 }
 
-func (s Shards) Query(query ...[]byte) DataSet {
+func (s Shards) Query(query [][]byte) DataSet {
 	ch := make(chan []Data)
+
 	for i := 0; i < SHARDCOUNT; i++ {
-		go func() {
-			ch <- s[i].search(query...)
-		}()
+		//fmt.Printf("------------------------------------- Searching Shard %d ------------------------------------------\n", i)
+		/*go func() {
+			fmt.Printf("------------------------------------- Go Func Shard %d ------------------------------------------\n", i)
+			//s[i].RLock()
+			ch <- s[i].search(query)
+			//s[i].RUnlock()
+		}()*/
+		if s[i].data.Len() > 0 {
+			go search(s[i], ch, query)
+		}
 	}
 	var dataSet DataSet
 	for i := 0; i < SHARDCOUNT; i++ {
 		select {
 		case data := <-ch:
+			//fmt.Printf("------------------------------------- Received %d of 63 ------------------------------------------\n", i)
 			dataSet = append(dataSet, data...)
 		}
+		fmt.Printf("----------------------------------DataSet After %d loops: %v---------------------------\n", i, dataSet)
 	}
+	close(ch)
 	sort.Sort(dataSet)
 	return dataSet
 }
 
-func (sh Shard) search(query ...[]byte) []Data {
+func search(sh *Shard, ch chan []Data, query [][]byte) {
 	sh.RLock()
 	enum, err := sh.data.SeekFirst()
 	if err != nil {
 		sh.RUnlock()
-		return nil
+		ch <- []Data{}
 	}
-	var res []Data
+	res := make([]Data, 0)
 	var match bool
 	for {
 		match = true
 		k, v, err := enum.Next()
 		if err != nil {
 			if err != io.EOF {
-				log.Fatal(err)
+				log.Fatal("--------------------------Search >> enum.Next: ", err)
 			}
 			break
 		}
@@ -158,7 +170,7 @@ func (sh Shard) search(query ...[]byte) []Data {
 	}
 	enum.Close()
 	sh.RUnlock()
-	return res
+	ch <- res
 }
 
 func (s Shards) Iter() <-chan Data {

@@ -129,14 +129,21 @@ func (ds *DataStore) Has(store string, key []byte) []byte {
 	return FALSE
 }
 
-func (ds *DataStore) Query(store, query string) []byte {
+func (ds *DataStore) Query(store string, query [][]byte) []byte {
+	if st, ok := ds.GetStore(store); ok {
+		return formatList(st.Query(query))
+	}
+	return NIL
+}
+
+func (ds *DataStore) _Query(store, query string) []byte {
 	re, err := regexp.Compile(query)
 	if err != nil {
 		log.Println(err)
 		return NIL
 	}
 	if st, ok := ds.GetStore(store); ok {
-		return formatList(st.Query(re))
+		return formatList(st._Query(re))
 	}
 	return NIL
 }
