@@ -110,6 +110,57 @@ func (s Shards) Size() int {
 	return n
 }
 
+func (s Shards) Query(query ...[]byte) DataSet {
+	ch := make(chan []Data)
+	for i := 0; i < SHARDCOUNT; i++ {
+		go func() {
+			ch <- s[i].search(query...)
+		}()
+	}
+	var dataSet DataSet
+	for i := 0; i < SHARDCOUNT; i++ {
+		select {
+		case data := <-ch:
+			dataSet = append(dataSet, data...)
+		}
+	}
+	sort.Sort(dataSet)
+	return dataSet
+}
+
+func (sh Shard) search(query ...[]byte) []Data {
+	sh.RLock()
+	enum, err := sh.data.SeekFirst()
+	if err != nil {
+		sh.RUnlock()
+		return nil
+	}
+	var res []Data
+	var match bool
+	for {
+		match = true
+		k, v, err := enum.Next()
+		if err != nil {
+			if err != io.EOF {
+				log.Fatal(err)
+			}
+			break
+		}
+		for _, q := range query {
+			if !bytes.Contains(v, q) {
+				match = false
+				break
+			}
+		}
+		if match {
+			res = append(res, Data{k, v})
+		}
+	}
+	enum.Close()
+	sh.RUnlock()
+	return res
+}
+
 func (s Shards) Iter() <-chan Data {
 	ch := make(chan Data)
 	go func() {
