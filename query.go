@@ -1,0 +1,81 @@
+package repono
+
+import "bytes"
+
+/*func Gt(b1, b2 []byte) bool {
+	if b1[0] > b2[0] {
+		if len(b1) > len(b2) {
+			return true
+		}
+		if len(b1) < len(b2) {
+			return false
+		}
+	}
+	return true
+}*/
+
+func Gt(b1, b2 []byte) bool {
+	if len(b1) > len(b2) || (len(b1) == len(b2) && b1[0] > b2[0]) {
+		return true
+	}
+	return false
+}
+
+func Lt(b1, b2 []byte) bool {
+	return !Gt(b1, b2)
+}
+
+const (
+	LT byte = iota
+	GT
+	EQ
+	NE
+)
+
+func C(key string, op byte, val string) []byte {
+	b := [][]byte{[]byte(`"` + key + `":`)}
+	b = append(b, []byte{op})
+	if val[0] == '"' && val[len(val)-1] == '"' {
+		return bytes.Join(append(b, []byte(val)), []byte{'_'})
+	}
+	if val == "true" || val == "false" {
+		return bytes.Join(append(b, []byte(val)), []byte{'_'})
+	}
+	isDigit := true
+	for _, c := range val {
+		if c < '0' || c > '9' {
+			isDigit = false
+			break
+		}
+	}
+	if isDigit {
+		return bytes.Join(append(b, []byte(val)), []byte{'_'})
+	}
+	return bytes.Join(append(b, []byte(`"`+val+`"`)), []byte{'_'})
+
+}
+
+func check(q, d []byte) bool {
+	qry := bytes.Split(q, []byte{'_'})
+	key := qry[0]
+	val := qry[2]
+	innerVal, ok := getValByKey(key, d)
+	if !ok {
+		return ok
+	}
+	switch qry[1][0] {
+	case GT:
+		return Gt(innerVal, val)
+	case LT:
+		return Lt(innerVal, val)
+	case EQ:
+		return bytes.Equal(innerVal, val)
+	case NE:
+		return !bytes.Equal(innerVal, val)
+	}
+	return false
+}
+
+func getValByKey(k, d []byte) ([]byte, bool) {
+	return nil, false
+}
