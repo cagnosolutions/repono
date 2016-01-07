@@ -147,9 +147,11 @@ func search(sh *Shard, ch chan []Data, query [][]byte) {
 	enum, err := sh.data.SeekFirst()
 	if err != nil {
 		if err != io.EOF {
-			log.Fatalf("Unknown tree.SeekFirst() error: %s\n", err)
+			log.Printf("Unknown tree.SeekFirst() error: %s\n", err)
+			ch <- nil
+			return
 		}
-		ch <- []Data{}
+		ch <- nil
 		return // go an io.EOF
 	}
 	defer enum.Close()
@@ -160,7 +162,9 @@ func search(sh *Shard, ch chan []Data, query [][]byte) {
 		k, v, err := enum.Next()
 		if err != nil {
 			if err != io.EOF {
-				log.Fatalf("Unknown enum.Next() error: %s\n", err)
+				log.Printf("Unknown enum.Next() error: %s\n", err)
+				ch <- nil
+				return
 			}
 			break // got an io.EOF
 		}
