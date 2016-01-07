@@ -14,6 +14,7 @@ import (
 
 var (
 	SHARDCOUNT = 64
+	DEBUG      = false
 )
 
 type Shards []*Shard
@@ -112,41 +113,46 @@ func (s Shards) Size() int {
 }
 
 func (s Shards) Query(query [][]byte) DataSet {
-	ch := make(chan []Data)
-
+	ch, active := make(chan []Data), 0
 	for i := 0; i < SHARDCOUNT; i++ {
-		//fmt.Printf("------------------------------------- Searching Shard %d ------------------------------------------\n", i)
-		/*go func() {
-			fmt.Printf("------------------------------------- Go Func Shard %d ------------------------------------------\n", i)
-			//s[i].RLock()
-			ch <- s[i].search(query)
-			//s[i].RUnlock()
-		}()*/
 		if s[i].data.Len() > 0 {
 			go search(s[i], ch, query)
+			active++
 		}
 	}
 	var dataSet DataSet
-	for i := 0; i < SHARDCOUNT; i++ {
+	if DEBUG {
+		log.Printf(">>>>> Found %d active shards...\n", active)
+	}
+	for i := 0; i < active; i++ {
 		select {
 		case data := <-ch:
-			//fmt.Printf("------------------------------------- Received %d of 63 ------------------------------------------\n", i)
+			if DEBUG {
+				log.Printf(">>>>> Got data: %+v\n", data)
+			}
 			dataSet = append(dataSet, data...)
 		}
-		fmt.Printf("----------------------------------DataSet After %d loops: %v---------------------------\n", i, dataSet)
 	}
 	close(ch)
 	sort.Sort(dataSet)
+	if DEBUG {
+		fmt.Printf(">>>>> Sorted Found DataSet: %+v\n", dataSet)
+	}
 	return dataSet
 }
 
 func search(sh *Shard, ch chan []Data, query [][]byte) {
 	sh.RLock()
+	defer sh.RUnlock()
 	enum, err := sh.data.SeekFirst()
 	if err != nil {
-		sh.RUnlock()
+		if err != io.EOF {
+			log.Fatalf("Unknown tree.SeekFirst() error: %s\n", err)
+		}
 		ch <- []Data{}
+		return // go an io.EOF
 	}
+	defer enum.Close()
 	res := make([]Data, 0)
 	var match bool
 	for {
@@ -154,9 +160,9 @@ func search(sh *Shard, ch chan []Data, query [][]byte) {
 		k, v, err := enum.Next()
 		if err != nil {
 			if err != io.EOF {
-				log.Fatal("--------------------------Search >> enum.Next: ", err)
+				log.Fatalf("Unknown enum.Next() error: %s\n", err)
 			}
-			break
+			break // got an io.EOF
 		}
 		for _, q := range query {
 			if !bytes.Contains(v, q) {
@@ -168,9 +174,8 @@ func search(sh *Shard, ch chan []Data, query [][]byte) {
 			res = append(res, Data{k, v})
 		}
 	}
-	enum.Close()
-	sh.RUnlock()
 	ch <- res
+	return
 }
 
 func (s Shards) Iter() <-chan Data {
