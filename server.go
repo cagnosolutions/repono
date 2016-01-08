@@ -13,10 +13,16 @@ import (
 	"time"
 )
 
-func ListenAndServe(port string, path ...string) {
-	if len(path) == 1 {
-		DB_PATH = path[0]
-	}
+var PATH string = "db/"
+var DELIM = '|'
+var MAXBUF = 4096
+var TIMEOUT = 8 // min
+
+func RunDBEmbeded(port string) {
+	go RunDB(port)
+}
+
+func RunDB(port string) {
 	ds := NewDataStore()
 	log.Println("Server starting...")
 	addr, err := net.ResolveTCPAddr("tcp", port)
@@ -61,7 +67,9 @@ func handleConn(ds *DataStore, conn *net.TCPConn) {
 			conn.Close()
 			return
 		} else {
-			conn.SetDeadline(time.Now().Add(8 * time.Minute))
+			if TIMEOUT != -1 {
+				conn.SetDeadline(time.Now().Add(time.Duration(TIMEOUT) * time.Minute))
+			}
 		}
 		if len(b) > MAXBUF {
 			log.Println("Client sent data exceeding size limit of 4096")

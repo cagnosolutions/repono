@@ -11,7 +11,7 @@ var mu sync.RWMutex
 
 func WriteStore(store string) {
 	mu.Lock()
-	if err := os.MkdirAll(DB_PATH+store, 0755); err != nil {
+	if err := os.MkdirAll(PATH+store, 0755); err != nil {
 		log.Fatal(err)
 	}
 	mu.Unlock()
@@ -19,7 +19,7 @@ func WriteStore(store string) {
 
 func DeleteStore(store string) {
 	mu.Lock()
-	if err := os.RemoveAll(DB_PATH + store); err != nil {
+	if err := os.RemoveAll(PATH + store); err != nil {
 		log.Fatal(err)
 	}
 	mu.Unlock()
@@ -27,7 +27,7 @@ func DeleteStore(store string) {
 
 func WriteData(store string, key, val []byte) {
 	mu.Lock()
-	if err := ioutil.WriteFile(DB_PATH+store+"/"+string(key)+".json", val, 0644); err != nil {
+	if err := ioutil.WriteFile(PATH+store+"/"+string(key)+".json", val, 0644); err != nil {
 		log.Fatal(err)
 	}
 	mu.Unlock()
@@ -35,7 +35,7 @@ func WriteData(store string, key, val []byte) {
 
 func DeleteData(store string, key []byte) {
 	mu.Lock()
-	if err := os.Remove(DB_PATH + store + "/" + string(key) + ".json"); err != nil {
+	if err := os.Remove(PATH + store + "/" + string(key) + ".json"); err != nil {
 		log.Fatal(err)
 	}
 	mu.Unlock()

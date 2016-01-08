@@ -2,18 +2,6 @@ package repono
 
 import "bytes"
 
-/*func Gt(b1, b2 []byte) bool {
-	if b1[0] > b2[0] {
-		if len(b1) > len(b2) {
-			return true
-		}
-		if len(b1) < len(b2) {
-			return false
-		}
-	}
-	return true
-}*/
-
 func Gt(b1, b2 []byte) bool {
 	if len(b1) > len(b2) {
 		return true

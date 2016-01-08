@@ -2,49 +2,12 @@ package repono
 
 import (
 	"bufio"
+	"bytes"
 	"encoding/json"
-	"fmt"
 	"io"
 	"log"
 	"net"
-	"strings"
 )
-
-// ^(?=.*"age":[1-5])(?=.*"active":true).*$
-
-type _Q [2]interface{}
-
-type Q map[string]interface{}
-
-func Stmt(q ..._Q) string {
-	if len(q) < 1 {
-		return ""
-	}
-	var s []string
-	for i, p := range q {
-		switch p[1].(type) {
-		case string:
-			p[1] = fmt.Sprintf("%q", p[1].(string))
-		}
-		s = append(s, fmt.Sprintf("(%q:%v)", p[0].(string), p[1]))
-		if i < len(q)-1 {
-			s = append(s, ".+")
-		}
-
-	}
-
-	s2 := make([]string, len(s))
-	copy(s2, s)
-	for i := len(s2)/2 - 1; i >= 0; i-- {
-		x := len(s2) - 1 - i
-		s2[i], s2[x] = s2[x], s2[i]
-
-	}
-
-	s = append(s, "|")
-	s = append(s, s2...)
-	return strings.Join(s, "")
-}
 
 type Client struct {
 	conn *net.TCPConn
@@ -96,10 +59,7 @@ func (c Client) Quit() {
 	c.conn.Close()
 }
 
-// localize uuid call, no need to reach out to the server, right?
 func (c Client) UUID() string {
-	//write(c.w, UUID)
-	//return string(c.read())
 	return UUID1()
 }
 
@@ -184,13 +144,6 @@ func (c Client) Query(s string, ptr interface{}, q ...[]byte) bool {
 	return true
 }
 
-func (c Client) _Query(s, q string, ptr interface{}) bool {
-
-	write(c.w, encode([][]byte{QUERY, []byte(s), []byte(q)}))
-	err := json.Unmarshal(c.read(), ptr)
-	if err != nil {
-		log.Printf("Error unmarshaling value: %s\n", err)
-		return false
-	}
-	return true
+func encode(bb [][]byte) []byte {
+	return bytes.Join(bb, []byte{byte(DELIM)})
 }

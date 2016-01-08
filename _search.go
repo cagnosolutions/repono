@@ -1,38 +1,9 @@
 package repono
 
-// http://play.golang.org/p/4_Zg_mjvc0
+import "bytes"
 
-import (
-	"bytes"
-	"fmt"
-)
-
-var (
-	p = []byte(`ABC ABCDAB ABCDABCDABDE`)
-	b = []byte(`ABCDABD`)
-)
-
-func main() {
-	n := bruteForceFind(p, b)
-	fmt.Println(n)
-
-	bf := makeByteFinder(b)
-	n = bf.next(p)
-	fmt.Println(n)
-}
-
-func bruteForceFind(p, b []byte) int {
-	for i := 0; i < len(p); i++ {
-		for j := 0; j < len(b); j++ {
-			if b[j] != p[i+j] {
-				break
-			} else if j == len(b)-1 {
-				return i
-			}
-		}
-	}
-	return -1
-}
+// boyer - moore patern matching algo
+// not using but keeping
 
 type byteFinder struct {
 	pattern        []byte

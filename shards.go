@@ -2,7 +2,6 @@ package repono
 
 import (
 	"bytes"
-	"fmt"
 	"hash/fnv"
 	"io"
 	"log"
@@ -13,8 +12,7 @@ import (
 )
 
 var (
-	SHARDCOUNT = 64
-	DEBUG      = false
+	SHARDCOUNT = 32
 )
 
 type Shards []*Shard
@@ -28,7 +26,6 @@ func NewShards() *Shards {
 	s := make(Shards, SHARDCOUNT)
 	for i := 0; i < SHARDCOUNT; i++ {
 		s[i] = &Shard{data: bplus.NewTree(bytes.Compare)}
-		// NOTE: close tree
 	}
 	return &s
 }
@@ -121,23 +118,14 @@ func (s Shards) Query(query [][]byte) DataSet {
 		}
 	}
 	var dataSet DataSet
-	if DEBUG {
-		log.Printf(">>>>> Found %d active shards...\n", active)
-	}
 	for i := 0; i < active; i++ {
 		select {
 		case data := <-ch:
-			if DEBUG {
-				log.Printf(">>>>> Got data: %+v\n", data)
-			}
 			dataSet = append(dataSet, data...)
 		}
 	}
 	close(ch)
 	sort.Sort(dataSet)
-	if DEBUG {
-		fmt.Printf(">>>>> Sorted Found DataSet: %+v\n", dataSet)
-	}
 	return dataSet
 }
 
@@ -152,7 +140,7 @@ func search(sh *Shard, ch chan []Data, query [][]byte) {
 			return
 		}
 		ch <- nil
-		return // go an io.EOF
+		return // got an io.EOF
 	}
 	defer enum.Close()
 	res := make([]Data, 0)
@@ -169,11 +157,6 @@ func search(sh *Shard, ch chan []Data, query [][]byte) {
 			break // got an io.EOF
 		}
 		for _, q := range query {
-			// replace with check()
-			/*if !bytes.Contains(v, q) {
-				match = false
-				break
-			}*/
 			if !check(q, v) {
 				match = false
 				break

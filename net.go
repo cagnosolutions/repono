@@ -2,12 +2,8 @@ package repono
 
 import (
 	"bufio"
-	"bytes"
 	"log"
 )
-
-var DELIM = '|'
-var MAXBUF = 4096
 
 var CRLF = []byte{'\r', '\n'}
 
@@ -25,13 +21,13 @@ var (
 )
 
 var (
-	PUT = []byte{'p', 'u', 't'}
-	ADD = []byte{'a', 'd', 'd'}
-	SET = []byte{'s', 'e', 't'}
-	GET = []byte{'g', 'e', 't'}
-	DEL = []byte{'d', 'e', 't'}
-	HAS = []byte{'h', 'a', 's'}
-	QUERY = []byte{'q', 'u', 'e', 'r','y'}
+	PUT   = []byte{'p', 'u', 't'}
+	ADD   = []byte{'a', 'd', 'd'}
+	SET   = []byte{'s', 'e', 't'}
+	GET   = []byte{'g', 'e', 't'}
+	DEL   = []byte{'d', 'e', 't'}
+	HAS   = []byte{'h', 'a', 's'}
+	QUERY = []byte{'q', 'u', 'e', 'r', 'y'}
 )
 
 var (
@@ -78,8 +74,4 @@ func write(w *bufio.Writer, b []byte) {
 		log.Printf("Error flushing write buffer: %s\n", err)
 		return
 	}
-}
-
-func encode(bb [][]byte) []byte {
-	return bytes.Join(bb, []byte{byte(DELIM)})
 }
