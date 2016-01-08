@@ -76,6 +76,24 @@ func check(q, d []byte) bool {
 	return false
 }
 
+// expects key to be in following format: `"foo":`...
+// ie. starting with a quote and ending in a quote then colon.
 func getValByKey(k, d []byte) ([]byte, bool) {
-	return nil, false
+	idx := bytes.Index(d, k)
+	if idx == -1 {
+		return nil, false
+	}
+	offset := idx + len(k)
+	if d[offset] == '"' {
+		idx = bytes.Index(d[offset:], []byte{'"', ','})
+		if idx == -1 {
+			return nil, false
+		}
+		return d[offset : offset+idx+1], true
+	}
+	idx = bytes.Index(d[offset:], []byte{','})
+	if idx == -1 {
+		return nil, false
+	}
+	return d[offset : offset+idx], true
 }
