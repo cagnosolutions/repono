@@ -170,7 +170,11 @@ func search(sh *Shard, ch chan []Data, query [][]byte) {
 		}
 		for _, q := range query {
 			// replace with check()
-			if !bytes.Contains(v, q) {
+			/*if !bytes.Contains(v, q) {
+				match = false
+				break
+			}*/
+			if !check(q, v) {
 				match = false
 				break
 			}

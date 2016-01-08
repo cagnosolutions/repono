@@ -15,13 +15,19 @@ import "bytes"
 }*/
 
 func Gt(b1, b2 []byte) bool {
-	if len(b1) > len(b2) || (len(b1) == len(b2) && b1[0] > b2[0]) {
+	if len(b1) > len(b2) {
 		return true
+	}
+	if len(b1) == len(b2) {
+		return bytes.Compare(b1, b2) == 1
 	}
 	return false
 }
 
 func Lt(b1, b2 []byte) bool {
+	if bytes.Equal(b1, b2) {
+		return false
+	}
 	return !Gt(b1, b2)
 }
 
@@ -87,13 +93,19 @@ func getValByKey(k, d []byte) ([]byte, bool) {
 	if d[offset] == '"' {
 		idx = bytes.Index(d[offset:], []byte{'"', ','})
 		if idx == -1 {
-			return nil, false
+			idx = bytes.Index(d[offset:], []byte{'"', '}'})
+			if idx == -1 {
+				return nil, false
+			}
 		}
 		return d[offset : offset+idx+1], true
 	}
 	idx = bytes.Index(d[offset:], []byte{','})
 	if idx == -1 {
-		return nil, false
+		idx = bytes.Index(d[offset:], []byte{'}'})
+		if idx == -1 {
+			return nil, false
+		}
 	}
 	return d[offset : offset+idx], true
 }

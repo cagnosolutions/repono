@@ -7,15 +7,15 @@ import (
 )
 
 type User struct {
-	Name   string `json:"name,omitempty"`
-	Age    int    `json:"age,omitempty"`
-	Active bool   `json:"active,omitempty"`
+	Name   string `json:"name"`
+	Age    int    `json:"age"`
+	Active bool   `json:"active"`
 }
 
 type Order struct {
-	Item     string `json:"item,omitempty"`
-	Quantity int    `json:"quantity,omitempty"`
-	Paid     bool   `json:"paid,omitempty"`
+	Item     string `json:"item"`
+	Quantity int    `json:"quantity"`
+	Paid     bool   `json:"paid"`
 }
 
 func main() {
@@ -69,7 +69,7 @@ func main() {
 	fmt.Println()
 
 	var q []User
-	c.Query("user", repono.Q{"active": true, "age": 2}, &q)
+	c.Query("user", &q, repono.C("age", repono.LT, "6"))
 	for _, u := range q {
 		fmt.Printf("id: %s, user: %+v\n", u.Name, u)
 	}
