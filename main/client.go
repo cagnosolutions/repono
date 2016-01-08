@@ -23,8 +23,9 @@ func main() {
 	fmt.Println("adding stores...")
 	c.AddStore("user")
 	c.AddStore("order")
-	fmt.Println("adding users...")
+	fmt.Println()
 
+	fmt.Println("adding users...")
 	uuid1 := c.UUID()
 	c.Add("user", uuid1, User{
 		Name:   uuid1,
@@ -41,6 +42,8 @@ func main() {
 		})
 		fmt.Printf("user %d add: %v\n", i, b)
 	}
+	fmt.Println()
+
 	fmt.Println("adding orders...")
 	for i := 0; i < 10; i++ {
 		s := c.UUID()
@@ -51,14 +54,15 @@ func main() {
 		})
 		fmt.Printf("user %d add: %v\n", i, b)
 	}
+	fmt.Println()
 	fmt.Println("adding finished!")
-
+	fmt.Println()
 	fmt.Println("getting a single user...")
 
 	var user User
 	c.Get("user", uuid1, &user)
 	fmt.Printf("Get() -> %+v\n", user)
-
+	fmt.Println()
 	fmt.Println("getting all users...")
 
 	var users []User
@@ -68,8 +72,9 @@ func main() {
 	}
 	fmt.Println()
 
+	fmt.Println("querying users...")
 	var q []User
-	c.Query("user", &q, repono.C("age", repono.LT, "6"))
+	c.Query("user", &q, repono.C("age", repono.LT, "6"), repono.C("active", repono.EQ, "true"))
 	for _, u := range q {
 		fmt.Printf("id: %s, user: %+v\n", u.Name, u)
 	}
