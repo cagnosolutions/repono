@@ -78,10 +78,13 @@ func handleConn(ds *DataStore, conn *net.TCPConn) {
 			continue
 		}
 		bb := bytes.SplitN(dropCRLF(b), []byte{byte(DELIM)}, 4)
+
 		if bytes.Equal(bb[0], QUERY) && len(bb) > 2 {
+			bb = bytes.SplitN(dropCRLF(b), []byte{byte(DELIM)}, -1)
 			write(w, ds.Query(string(bb[1]), bb[2:]))
 			continue
 		}
+
 		cmd := bb[0]
 		switch len(bb) {
 		case 1:

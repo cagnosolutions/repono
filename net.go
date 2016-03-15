@@ -56,18 +56,18 @@ func write(w *bufio.Writer, b []byte) {
 	n, err := w.Write(b)
 	if n < 1 {
 		log.Printf("Error, %d bytes to write\n", n)
-		return
+		//return
 	} else if err != nil {
 		log.Printf("Error writing: %s\n", err)
-		return
+		//return
 	}
 	n, err = w.Write(CRLF)
 	if n < 1 {
 		log.Printf("Error, %d bytes to write\n", n)
-		return
+		//return
 	} else if err != nil {
 		log.Printf("Error writing: %s\n", err)
-		return
+		//return
 	}
 	err = w.Flush()
 	if err != nil {

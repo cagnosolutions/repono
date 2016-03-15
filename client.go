@@ -63,79 +63,79 @@ func (c Client) UUID() string {
 	return UUID1()
 }
 
-func (c Client) AddStore(s string) bool {
-	write(c.w, encode([][]byte{ADDSTORE, []byte(s)}))
+func (c Client) AddStore(store string) bool {
+	write(c.w, encode([][]byte{ADDSTORE, []byte(store)}))
 	return c.getBool()
 }
 
-func (c Client) GetAll(s string, ptr interface{}) {
-	write(c.w, encode([][]byte{GETALL, []byte(s)}))
+func (c Client) GetAll(store string, ptr interface{}) {
+	write(c.w, encode([][]byte{GETALL, []byte(store)}))
 	err := json.Unmarshal(c.read(), ptr)
 	if err != nil {
 		log.Printf("Error unmarshaling value: %s\n", err)
 	}
 }
 
-func (c Client) HasStore(s string) bool {
-	write(c.w, encode([][]byte{DELSTORE, []byte(s)}))
+func (c Client) HasStore(store string) bool {
+	write(c.w, encode([][]byte{DELSTORE, []byte(store)}))
 	return c.getBool()
 }
 
-func (c Client) DelStore(s string) bool {
-	write(c.w, encode([][]byte{HASSTORE, []byte(s)}))
+func (c Client) DelStore(store string) bool {
+	write(c.w, encode([][]byte{HASSTORE, []byte(store)}))
 	return c.getBool()
 }
 
-func (c Client) Put(s string, v interface{}) bool {
-	b, err := json.Marshal(v)
+func (c Client) Put(store string, value interface{}) bool {
+	b, err := json.Marshal(value)
 	if err != nil {
 		log.Printf("Error marshaling value: %s\n", err)
 		return false
 	}
-	write(c.w, encode([][]byte{PUT, []byte(s), b}))
+	write(c.w, encode([][]byte{PUT, []byte(store), b}))
 	return c.getBool()
 }
 
-func (c Client) Add(s, k string, v interface{}) bool {
-	b, err := json.Marshal(v)
+func (c Client) Add(store, key string, value interface{}) bool {
+	b, err := json.Marshal(value)
 	if err != nil {
 		log.Printf("Error marshaling value: %s\n", err)
 		return false
 	}
-	write(c.w, encode([][]byte{ADD, []byte(s), []byte(k), b}))
+	write(c.w, encode([][]byte{ADD, []byte(store), []byte(key), b}))
 	return c.getBool()
 }
 
-func (c Client) Set(s, k string, v interface{}) bool {
-	b, err := json.Marshal(v)
+func (c Client) Set(store, key string, value interface{}) bool {
+	b, err := json.Marshal(value)
 	if err != nil {
 		log.Printf("Error marshaling value: %s\n", err)
 		return false
 	}
-	write(c.w, encode([][]byte{SET, []byte(s), []byte(k), b}))
+	write(c.w, encode([][]byte{SET, []byte(store), []byte(key), b}))
 	return c.getBool()
 }
 
-func (c Client) Get(s, k string, ptr interface{}) {
-	write(c.w, encode([][]byte{GET, []byte(s), []byte(k)}))
+func (c Client) Get(store, key string, ptr interface{}) {
+	write(c.w, encode([][]byte{GET, []byte(store), []byte(key)}))
 	err := json.Unmarshal(c.read(), ptr)
 	if err != nil {
 		log.Printf("Error unmarshaling value: %s\n", err)
 	}
 }
 
-func (c Client) Del(s, k string) bool {
-	write(c.w, encode([][]byte{DEL, []byte(s), []byte(k)}))
+func (c Client) Del(store, key string) bool {
+	write(c.w, encode([][]byte{DEL, []byte(store), []byte(key)}))
 	return c.getBool()
 }
 
-func (c Client) Has(s, k string) bool {
-	write(c.w, encode([][]byte{HAS, []byte(s), []byte(k)}))
+func (c Client) Has(store, key string) bool {
+	write(c.w, encode([][]byte{HAS, []byte(store), []byte(key)}))
 	return c.getBool()
 }
 
-func (c Client) Query(s string, ptr interface{}, q ...[]byte) bool {
-	write(c.w, encode(append([][]byte{QUERY, []byte(s)}, q...)))
+func (c Client) Query(store string, ptr interface{}, query ...[]byte) bool {
+	write(c.w, encode(append([][]byte{QUERY, []byte(store)}, query...)))
 	err := json.Unmarshal(c.read(), ptr)
 	if err != nil {
 		log.Printf("Error unmarshaling value: %s\n", err)
