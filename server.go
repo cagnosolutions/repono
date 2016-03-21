@@ -18,8 +18,31 @@ var DELIM = '|'
 var MAXBUF = 4096
 var TIMEOUT = 8 // min
 
-func RunDBEmbeded(port string) {
-	go RunDB(port)
+func RunDBEmbeded(port string) *DataStore {
+	ds := NewDataStore()
+	go (func() {
+		log.Println("Server starting...")
+		addr, err := net.ResolveTCPAddr("tcp", port)
+		if err != nil {
+			log.Fatal(err)
+		}
+		ln, err := net.ListenTCP("tcp", addr)
+		if err != nil {
+			log.Fatal(err)
+		}
+		log.Println("Listening on", port, "for connections...")
+		catchSigInts()
+		for {
+			conn, err := ln.AcceptTCP()
+			if err != nil {
+				log.Println(err)
+				continue
+			}
+			log.Printf("Handling connection from %v\n", conn.RemoteAddr().String())
+			go handleConn(ds, conn)
+		}
+	})()
+	return ds
 }
 
 func RunDB(port string) {

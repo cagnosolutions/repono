@@ -2,7 +2,23 @@ package repono
 
 import "bytes"
 
-func Gt(b1, b2 []byte) bool {
+func Gt(key string, val string) []byte {
+	return C(key, GT, val)
+}
+
+func Lt(key string, val string) []byte {
+	return C(key, LT, val)
+}
+
+func Eq(key string, val string) []byte {
+	return C(key, EQ, val)
+}
+
+func Ne(key string, val string) []byte {
+	return C(key, NE, val)
+}
+
+func gt(b1, b2 []byte) bool {
 	if len(b1) > len(b2) {
 		return true
 	}
@@ -12,11 +28,11 @@ func Gt(b1, b2 []byte) bool {
 	return false
 }
 
-func Lt(b1, b2 []byte) bool {
+func lt(b1, b2 []byte) bool {
 	if bytes.Equal(b1, b2) {
 		return false
 	}
-	return !Gt(b1, b2)
+	return !gt(b1, b2)
 }
 
 const (
@@ -59,9 +75,9 @@ func check(q, d []byte) bool {
 	}
 	switch qry[1][0] {
 	case GT:
-		return Gt(innerVal, val)
+		return gt(innerVal, val)
 	case LT:
-		return Lt(innerVal, val)
+		return lt(innerVal, val)
 	case EQ:
 		return bytes.Equal(innerVal, val)
 	case NE:
