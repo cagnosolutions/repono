@@ -18,7 +18,7 @@ var DELIM = '|'
 var MAXBUF = 4096
 var TIMEOUT = 8 // min
 
-func RunDBEmbeded(port string) *DataStore {
+func EmbedAndServeDB(port string) *DataStore {
 	ds := NewDataStore()
 	go (func() {
 		log.Println("Server starting...")
@@ -45,7 +45,7 @@ func RunDBEmbeded(port string) *DataStore {
 	return ds
 }
 
-func RunDB(port string) {
+func ServeDB(port string) {
 	ds := NewDataStore()
 	log.Println("Server starting...")
 	addr, err := net.ResolveTCPAddr("tcp", port)

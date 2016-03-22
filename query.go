@@ -113,3 +113,50 @@ func getValByKey(k, d []byte) ([]byte, bool) {
 	}
 	return d[offset : offset+idx], true
 }
+
+/*
+type QueryBuilder struct {
+	query [][]byte
+	store string
+}
+
+func (c *Client) StartQuery(store string) {
+	c.queryBuilder = QueryBuilder{
+		query: make([][]byte, 0, 0),
+		store: store,
+	}
+}
+
+func (c *Client) QueryGT(key string, val string) {
+	if c.queryBuilder.query == nil {
+		return
+	}
+	c.queryBuilder.query = append(c.queryBuilder.query, C(key, GT, val))
+}
+
+func (c *Client) QueryLT(key string, val string) {
+	if c.queryBuilder.query == nil {
+		return
+	}
+	c.queryBuilder.query = append(c.queryBuilder.query, C(key, LT, val))
+}
+
+func (c *Client) QueryEQ(key string, val string) {
+	if c.queryBuilder.query == nil {
+		return
+	}
+	c.queryBuilder.query = append(c.queryBuilder.query, C(key, EQ, val))
+}
+
+func (c *Client) QueryNE(key string, val string) {
+	if c.queryBuilder.query == nil {
+		return
+	}
+	c.queryBuilder.query = append(c.queryBuilder.query, C(key, NE, val))
+}
+
+func (c *Client) ExecuteQuery(ptr interface{}) {
+	c.Query(c.queryBuilder.store, ptr, c.queryBuilder.query...)
+	c.queryBuilder = QueryBuilder{}
+}
+*/
